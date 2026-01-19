@@ -258,12 +258,7 @@ type ProxmoxClusterStatus struct {
 
 	// conditions defines the current service state of the ProxmoxCluster.
 	// +optional
-	//nolint:kubeapilinter
-	Conditions *[]clusterv1.Condition `json:"conditions,omitempty"`
-	// Justification: kubeapilinter returns a false positive on fields called Conditions
-	// because type is assumed to be metav1.Conditions.
-	// deepcopy-gen wrongly infers the type when this is a pointer to clusterv1.Conditions,
-	// So we need to store *[]clusterv1.Condition to create correct deepcopy code.
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // InClusterZoneRef holds the InClusterIPPools associated with a zone.
@@ -351,22 +346,13 @@ type ProxmoxClusterList struct {
 }
 
 // GetConditions returns the observations of the operational state of the ProxmoxCluster resource.
-func (c *ProxmoxCluster) GetConditions() clusterv1.Conditions {
-	conditions := ptr.Deref(c.Status.Conditions, []clusterv1.Condition{})
-
-	return conditions
+func (c *ProxmoxCluster) GetConditions() []metav1.Condition {
+	return c.Status.Conditions
 }
 
-// SetConditions sets the underlying service state of the ProxmoxCluster to the predescribed clusterv1.Conditions.
-func (c *ProxmoxCluster) SetConditions(conditions clusterv1.Conditions) {
-	// This is required because deepcopy-gen incorrectly infers the type of conditions.
-	// Justification: static assignment will not work because type assurance
-	// can not cast from type clusterv1.Conditions to []clusterv1.Condition.
-	//nolint:staticcheck
-	var typeHelper []clusterv1.Condition
-	typeHelper = conditions
-
-	c.Status.Conditions = &typeHelper
+// SetConditions sets the underlying service state of the ProxmoxCluster to the predescribed conditions.
+func (c *ProxmoxCluster) SetConditions(conditions []metav1.Condition) {
+	c.Status.Conditions = conditions
 }
 
 // AddInClusterZoneRef will set the Zone references status for the provided pool.
