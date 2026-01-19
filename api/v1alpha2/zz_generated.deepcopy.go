@@ -7,7 +7,7 @@ package v1alpha2
 import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/cluster-api/api/core/v1beta1"
+	"sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/errors"
 )
 
@@ -430,7 +430,7 @@ func (in *ProxmoxClusterSpec) DeepCopyInto(out *ProxmoxClusterSpec) {
 	*out = *in
 	if in.ControlPlaneEndpoint != nil {
 		in, out := &in.ControlPlaneEndpoint, &out.ControlPlaneEndpoint
-		*out = new(v1beta1.APIEndpoint)
+		*out = new(v1beta2.APIEndpoint)
 		**out = **in
 	}
 	if in.ExternalManagedControlPlane != nil {
@@ -529,10 +529,10 @@ func (in *ProxmoxClusterStatus) DeepCopyInto(out *ProxmoxClusterStatus) {
 	}
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = new([]v1beta1.Condition)
+		*out = new([]v1beta2.Condition)
 		if **in != nil {
 			in, out := *in, *out
-			*out = make([]v1beta1.Condition, len(*in))
+			*out = make([]v1beta2.Condition, len(*in))
 			for i := range *in {
 				(*in)[i].DeepCopyInto(&(*out)[i])
 			}
@@ -613,7 +613,7 @@ func (in *ProxmoxClusterTemplateResource) DeepCopyInto(out *ProxmoxClusterTempla
 	*out = *in
 	if in.ObjectMeta != nil {
 		in, out := &in.ObjectMeta, &out.ObjectMeta
-		*out = new(v1beta1.ObjectMeta)
+		*out = new(v1beta2.ObjectMeta)
 		(*in).DeepCopyInto(*out)
 	}
 	in.Spec.DeepCopyInto(&out.Spec)
@@ -819,7 +819,7 @@ func (in *ProxmoxMachineStatus) DeepCopyInto(out *ProxmoxMachineStatus) {
 	}
 	if in.Addresses != nil {
 		in, out := &in.Addresses, &out.Addresses
-		*out = make([]v1beta1.MachineAddress, len(*in))
+		*out = make([]v1beta2.MachineAddress, len(*in))
 		copy(*out, *in)
 	}
 	if in.VMStatus != nil {
@@ -881,10 +881,10 @@ func (in *ProxmoxMachineStatus) DeepCopyInto(out *ProxmoxMachineStatus) {
 	}
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = new([]v1beta1.Condition)
+		*out = new([]v1beta2.Condition)
 		if **in != nil {
 			in, out := *in, *out
-			*out = make([]v1beta1.Condition, len(*in))
+			*out = make([]v1beta2.Condition, len(*in))
 			for i := range *in {
 				(*in)[i].DeepCopyInto(&(*out)[i])
 			}
@@ -965,7 +965,7 @@ func (in *ProxmoxMachineTemplateResource) DeepCopyInto(out *ProxmoxMachineTempla
 	*out = *in
 	if in.ObjectMeta != nil {
 		in, out := &in.ObjectMeta, &out.ObjectMeta
-		*out = new(v1beta1.ObjectMeta)
+		*out = new(v1beta2.ObjectMeta)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Spec != nil {
