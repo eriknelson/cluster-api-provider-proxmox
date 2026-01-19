@@ -60,7 +60,7 @@ func reconcileBootstrapData(ctx context.Context, machineScope *scope.MachineScop
 			Type:    string(infrav1.VMProvisionedCondition),
 			Status:  metav1.ConditionFalse,
 			Reason:  infrav1.CloningFailedReason,
-			Message: fmt.Sprintf("%s", err),
+			Message: err.Error(),
 		})
 		return false, err
 	}
@@ -73,7 +73,7 @@ func reconcileBootstrapData(ctx context.Context, machineScope *scope.MachineScop
 			Type:    string(infrav1.VMProvisionedCondition),
 			Status:  metav1.ConditionFalse,
 			Reason:  infrav1.WaitingForBootstrapDataReconcilationReason,
-			Message: fmt.Sprintf("%s", err),
+			Message: err.Error(),
 		})
 		return false, err
 	}
@@ -95,7 +95,7 @@ func reconcileBootstrapData(ctx context.Context, machineScope *scope.MachineScop
 			Type:    string(infrav1.VMProvisionedCondition),
 			Status:  metav1.ConditionFalse,
 			Reason:  infrav1.VMProvisionFailedReason,
-			Message: fmt.Sprintf("%s", err),
+			Message: err.Error(),
 		})
 		return false, errors.Wrap(err, "failed to inject bootstrap data")
 	}
