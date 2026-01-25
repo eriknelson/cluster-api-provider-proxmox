@@ -220,6 +220,11 @@ func reconcileDisks(ctx context.Context, machineScope *scope.MachineScope) error
 		}
 	}
 
+	// Attach additional pre-existing disks
+	if err := ReconcileAdditionalDisks(ctx, machineScope); err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -142,9 +142,13 @@ type Storage struct {
 	// +optional
 	BootVolume *DiskSize `json:"bootVolume,omitempty"`
 
-	// TODO Intended to add handling for additional volumes,
-	// which will be added to the node.
-	// e.g. AdditionalVolumes []DiskSize.
+	// AdditionalDisks defines pre-existing disks to attach to the VM.
+	// These can be storage pool disks or physical passthrough devices.
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable"
+	// +optional
+	// +listType=map
+	// +listMapKey=name
+	AdditionalDisks []AdditionalDisk `json:"additionalDisks,omitempty"`
 }
 
 // DiskSize is contains values for the disk device and size.
