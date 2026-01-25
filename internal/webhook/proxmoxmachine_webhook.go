@@ -65,6 +65,12 @@ func (p *ProxmoxMachine) ValidateCreate(_ context.Context, obj runtime.Object) (
 		return warnings, err
 	}
 
+	err = ValidateAdditionalDisks(machine)
+	if err != nil {
+		warnings = append(warnings, fmt.Sprintf("cannot create proxmox machine %s", machine.GetName()))
+		return warnings, err
+	}
+
 	return warnings, nil
 }
 
@@ -85,6 +91,12 @@ func (p *ProxmoxMachine) ValidateUpdate(_ context.Context, old, newObj runtime.O
 	}
 
 	err = validateNetworks(newMachine)
+	if err != nil {
+		warnings = append(warnings, fmt.Sprintf("cannot update proxmox machine %s", newMachine.GetName()))
+		return warnings, err
+	}
+
+	err = ValidateAdditionalDisks(newMachine)
 	if err != nil {
 		warnings = append(warnings, fmt.Sprintf("cannot update proxmox machine %s", newMachine.GetName()))
 		return warnings, err
