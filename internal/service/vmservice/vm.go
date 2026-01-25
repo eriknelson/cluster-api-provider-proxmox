@@ -277,6 +277,11 @@ func reconcileDisks(ctx context.Context, machineScope *scope.MachineScope) error
 		}
 	}
 
+	// Attach additional pre-existing disks (fork: additionalDisks support)
+	if err := ReconcileAdditionalDisks(ctx, machineScope); err != nil {
+		return err
+	}
+
 	// Machine is now waiting for IPAddress Allocations, move State Machine along
 	conditions.Set(machineScope.ProxmoxMachine, metav1.Condition{
 		Type:   infrav1.ProxmoxMachineVirtualMachineProvisionedCondition,
