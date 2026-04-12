@@ -144,6 +144,7 @@ type Storage struct {
 
 	// AdditionalDisks defines pre-existing disks to attach to the VM.
 	// These can be storage pool disks or physical passthrough devices.
+	// +kubebuilder:validation:MaxItems=30
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable"
 	// +optional
 	// +listType=map
