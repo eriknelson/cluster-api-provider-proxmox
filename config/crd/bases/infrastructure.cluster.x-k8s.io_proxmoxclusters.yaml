@@ -176,6 +176,7 @@ spec:
                                 - type
                                 - value
                                 type: object
+                              maxItems: 30
                               type: array
                               x-kubernetes-list-map-keys:
                               - name
