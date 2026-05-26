@@ -360,6 +360,21 @@ func reconcileVirtualMachineConfig(ctx context.Context, machineScope *scope.Mach
 	}
 
 	if len(vmOptions) == 0 {
+		// No config changes needed (e.g. cloned VM already matches spec).
+		// We still MUST advance the state-machine condition so downstream
+		// reconcile functions don't silently no-op via their
+		// `if reason != WaitingForX return nil` guards while
+		// `ReconcileVM` unconditionally sets vm.State = Ready at the end —
+		// which would mark the ProxmoxMachine ready without ever running
+		// reconcileDisks / reconcileBootstrapData / reconcilePowerState.
+		// This matches the symmetric transition that reconcileDisks does
+		// to WaitingForStaticIPAllocation regardless of whether a resize
+		// task fired.
+		conditions.Set(machineScope.ProxmoxMachine, metav1.Condition{
+			Type:   infrav1.ProxmoxMachineVirtualMachineProvisionedCondition,
+			Status: metav1.ConditionFalse,
+			Reason: infrav1.ProxmoxMachineVirtualMachineProvisionedWaitingForDiskReconciliationReason,
+		})
 		return false, nil
 	}
 
