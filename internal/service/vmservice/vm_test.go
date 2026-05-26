@@ -426,6 +426,18 @@ func TestReconcileVirtualMachineConfig_NoConfig(t *testing.T) {
 	requeue, err := reconcileVirtualMachineConfig(context.Background(), machineScope)
 	require.NoError(t, err)
 	require.False(t, requeue)
+
+	// Even with no config changes, the state machine MUST progress to
+	// WaitingForDiskReconciliation. Otherwise downstream reconcile
+	// functions (reconcileDisks, reconcileBootstrapData, reconcilePowerState,
+	// etc.) silently no-op via their condition-reason guards while
+	// ReconcileVM unconditionally sets vm.State = Ready at the end —
+	// which marks the ProxmoxMachine ready without ever attaching the
+	// cloud-init ISO or starting the VM.
+	require.Equal(t,
+		infrav1.ProxmoxMachineVirtualMachineProvisionedWaitingForDiskReconciliationReason,
+		conditions.GetReason(machineScope.ProxmoxMachine, infrav1.ProxmoxMachineVirtualMachineProvisionedCondition),
+	)
 }
 
 func TestReconcileVirtualMachineConfig_ApplyConfig(t *testing.T) {
