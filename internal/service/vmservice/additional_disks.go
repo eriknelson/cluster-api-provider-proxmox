@@ -36,8 +36,10 @@ func ReconcileAdditionalDisks(ctx context.Context, machineScope *scope.MachineSc
 	}
 
 	vm := machineScope.VirtualMachine
-	if vm.IsRunning() || machineScope.ProxmoxMachine.Status.Ready {
-		// We only want to do this before the machine was started or is ready
+	if vm.IsRunning() || ptr.Deref(machineScope.ProxmoxMachine.Status.Initialization.Provisioned, false) {
+		// We only want to do this before the machine was started or is ready.
+		// v0.8.1+ moved the readiness signal from Status.Ready to
+		// Status.Initialization.Provisioned (CAPI v1beta2 convention).
 		return nil
 	}
 
