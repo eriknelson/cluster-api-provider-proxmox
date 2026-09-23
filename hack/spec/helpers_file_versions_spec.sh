@@ -11,6 +11,13 @@ Describe 'helpers.sh — file version functions'
       When call dockerfile_get_go
       The output should equal '1.25'
     End
+
+    It 'reads a Harbor-proxied Go builder image'
+      sed -i 's|FROM golang:1.25|FROM harbor.secnet.nsk.io/dockerhub/library/golang:1.26.6|' \
+        "${REPO_ROOT}/Dockerfile"
+      When call dockerfile_get_go
+      The output should equal '1.26'
+    End
   End
 
   Describe 'dockerfile_set_go'
@@ -23,6 +30,15 @@ Describe 'helpers.sh — file version functions'
       dockerfile_set_go '1.26' >/dev/null
       When call dockerfile_get_go
       The output should equal '1.26'
+    End
+
+    It 'updates the full version of a Harbor-proxied Go builder'
+      sed -i 's|FROM golang:1.25|FROM harbor.secnet.nsk.io/dockerhub/library/golang:1.26.6|' \
+        "${REPO_ROOT}/Dockerfile"
+      dockerfile_set_go '1.27.1' >/dev/null
+      When call grep '^FROM harbor.secnet.nsk.io/dockerhub/library/golang:1.27.1 ' \
+        "${REPO_ROOT}/Dockerfile"
+      The status should be success
     End
   End
 

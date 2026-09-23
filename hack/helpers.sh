@@ -239,7 +239,11 @@ gomod_tidy() {
 # dockerfile_get_go returns the Go major.minor from the Dockerfile
 # base image (e.g. "1.25").
 dockerfile_get_go() {
-    awk '/^FROM golang:[0-9]+\.[0-9]+/{match($0, /[0-9]+\.[0-9]+/); print substr($0, RSTART, RLENGTH); exit}' "${REPO_ROOT}/Dockerfile"
+    awk '$1 == "FROM" && $2 ~ /(^|\/)golang:[0-9]+\.[0-9]+/ {
+        match($2, /[0-9]+\.[0-9]+/)
+        print substr($2, RSTART, RLENGTH)
+        exit
+    }' "${REPO_ROOT}/Dockerfile"
     return
 }
 
@@ -319,11 +323,12 @@ makefile_get_envtest() {
 # Each function updates a version in a file, prints "file: Updated … old to new"
 # when a change is made, and stays silent on no-op.
 
-# dockerfile_set_go updates the Go major.minor in the Dockerfile base image.
+# dockerfile_set_go updates the Go version in the Dockerfile base image.
 dockerfile_set_go() {
     local new="$1" old
     old=$(dockerfile_get_go)
-    if sedi "s/^(FROM golang:)[0-9]+\.[0-9]+(.*)/\1${new}\2/" "${REPO_ROOT}/Dockerfile"; then
+    if sedi "s|^(FROM ([^ ]*/)?golang:)[0-9]+\.[0-9]+(\.[0-9]+)?(.*)|\1${new}\4|" \
+        "${REPO_ROOT}/Dockerfile"; then
         echo "Dockerfile: Updated golang:${old} to golang:${new}"
     fi
     return

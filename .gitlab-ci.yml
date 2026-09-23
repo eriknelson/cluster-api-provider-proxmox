@@ -36,6 +36,7 @@ default:
     paths:
       - .cache/gomod
       - .cache/gobuild
+      - .cache/tools
       - bin
   before_script:
     - apt-get update -qq && apt-get install -y -qq git make
@@ -50,7 +51,8 @@ verify-versions:
   extends: .go
   stage: validate
   script:
-    - make verify-versions
+    - GOBIN="$CI_PROJECT_DIR/.cache/tools" go install github.com/mikefarah/yq/v4@v4.53.3
+    - PATH="$CI_PROJECT_DIR/.cache/tools:$PATH" make verify-versions
 
 test:
   extends: .go
