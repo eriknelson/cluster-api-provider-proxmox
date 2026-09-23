@@ -60,6 +60,12 @@ test:
   script:
     - make test WHAT='./...'
 
+test:release:
+  stage: validate
+  image: $NODE_IMAGE
+  script:
+    - node --test hack/release.test.mjs
+
 determine-version:
   stage: prepare
   image: $NODE_IMAGE
@@ -70,22 +76,9 @@ determine-version:
     - if: '$RELEASE == "true"'
   before_script:
     - apt-get update -qq && apt-get install -y -qq git ca-certificates
-    - npm init -y >/dev/null
-    - npm install --save-dev semantic-release@24 @semantic-release/commit-analyzer
-        @semantic-release/release-notes-generator @semantic-release/changelog
-        @semantic-release/git @semantic-release/gitlab
-        conventional-changelog-conventionalcommits@10.3.0
   script:
-    - |
-      set +e
-      SR_OUTPUT=$(npx --no-install semantic-release --dry-run --no-ci 2>&1)
-      SR_EXIT=$?
-      set -e
-      echo "$SR_OUTPUT"
-      test "$SR_EXIT" -eq 0 || exit "$SR_EXIT"
-      VERSION=$(echo "$SR_OUTPUT" | sed -n 's/.*[Tt]he next release version is \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' | head -1)
-      test -n "$VERSION" || { echo 'No release version determined'; exit 1; }
-      echo "VERSION=$VERSION" > version.env
+    - node hack/release.mjs version > version.env
+    - cat version.env
   artifacts:
     reports:
       dotenv: version.env
@@ -97,6 +90,7 @@ build:image:
     - lint
     - verify-versions
     - test
+    - test:release
     - job: determine-version
       optional: true
   script:
@@ -113,7 +107,7 @@ build:image:
           --tag "${IMAGE}:${CI_COMMIT_SHORT_SHA}" .
       fi
 
-semantic-release:
+publish-release:
   stage: release
   image: $NODE_IMAGE
   variables:
@@ -126,10 +120,5 @@ semantic-release:
     - build:image
   before_script:
     - apt-get update -qq && apt-get install -y -qq git ca-certificates
-    - npm init -y >/dev/null
-    - npm install --save-dev semantic-release@24 @semantic-release/commit-analyzer
-        @semantic-release/release-notes-generator @semantic-release/changelog
-        @semantic-release/git @semantic-release/gitlab
-        conventional-changelog-conventionalcommits@10.3.0
   script:
-    - npx --no-install semantic-release
+    - node hack/release.mjs publish
