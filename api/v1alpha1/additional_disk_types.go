@@ -26,11 +26,11 @@ type DiskType string
 
 const (
 	// DiskTypeStoragePool indicates a disk from a Proxmox storage pool.
-	// Example value: "uldum:vm-100-disk-1"
+	// Example value: "uldum:vm-100-disk-1".
 	DiskTypeStoragePool DiskType = "storagePool"
 
 	// DiskTypePassthrough indicates a physical disk passthrough.
-	// Example value: "/dev/disk/by-id/ata-ST20000NM007D-3DJ103_ZVTA2PZC"
+	// Example value: "/dev/disk/by-id/ata-ST20000NM007D-3DJ103_ZVTA2PZC".
 	DiskTypePassthrough DiskType = "passthrough"
 )
 

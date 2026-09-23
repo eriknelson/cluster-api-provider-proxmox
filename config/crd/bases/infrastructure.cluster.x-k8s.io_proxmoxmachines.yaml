@@ -1029,7 +1029,7 @@ spec:
                 properties:
                   additionalDisks:
                     description: |-
-                      AdditionalDisks defines pre-existing disks to attach to the VM.
+                      additionalDisks defines pre-existing disks to attach to the VM.
                       These can be storage pool disks or physical passthrough devices.
                     items:
                       description: |-
@@ -1038,7 +1038,7 @@ spec:
                       properties:
                         cache:
                           description: |-
-                            Cache specifies the cache mode for the disk.
+                            cache specifies the cache mode for the disk.
                             Valid values: none, writethrough, writeback, unsafe, directsync
                           enum:
                           - none
@@ -1049,14 +1049,15 @@ spec:
                           type: string
                         device:
                           description: |-
-                            Device is the Proxmox disk device name to use for attachment.
+                            device is the Proxmox disk device name to use for attachment.
                             Must not conflict with the boot volume device.
                             Example values: scsi1, scsi2, virtio1, ide1, sata1
+                          minLength: 1
                           pattern: ^(scsi|virtio|ide|sata)[0-9]+$
                           type: string
                         discard:
                           description: |-
-                            Discard specifies whether to pass discard/trim requests to the underlying storage.
+                            discard specifies whether to pass discard/trim requests to the underlying storage.
                             Valid values: on, ignore
                           enum:
                           - "on"
@@ -1064,22 +1065,22 @@ spec:
                           type: string
                         iothread:
                           description: |-
-                            IOThread enables IO threading for this disk.
+                            iothread enables IO threading for this disk.
                             Only applies to SCSI and VirtIO disk types.
                           type: boolean
                         name:
                           description: |-
-                            Name is a unique identifier for this disk within the VM configuration.
+                            name is a unique identifier for this disk within the VM configuration.
                             Used for tracking and debugging purposes.
                           minLength: 1
                           type: string
                         ssd:
                           description: |-
-                            SSD enables SSD emulation for this disk.
+                            ssd enables SSD emulation for this disk.
                             Useful for passing TRIM support to the guest OS.
                           type: boolean
                         type:
-                          description: Type specifies whether this is a storage pool
+                          description: type specifies whether this is a storage pool
                             disk or passthrough device.
                           enum:
                           - storagePool
@@ -1087,7 +1088,7 @@ spec:
                           type: string
                         value:
                           description: |-
-                            Value is the disk reference.
+                            value is the disk reference.
                             For storagePool type: "storage:disk-name" (e.g., "uldum:vm-100-disk-1")
                             For passthrough type: device path (e.g., "/dev/disk/by-id/ata-ST20000NM007D-3DJ103_ZVTA2PZC")
                           minLength: 1

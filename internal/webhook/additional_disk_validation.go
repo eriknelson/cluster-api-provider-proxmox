@@ -27,13 +27,13 @@ import (
 	infrav1 "github.com/ionos-cloud/cluster-api-provider-proxmox/api/v1alpha2"
 )
 
-// deviceNamePattern validates disk device names like scsi1, virtio0, ide2, sata0
+// deviceNamePattern validates disk device names like scsi1, virtio0, ide2, sata0.
 var deviceNamePattern = regexp.MustCompile(`^(scsi|virtio|ide|sata)[0-9]+$`)
 
-// storagePoolPattern validates storage pool disk references like "uldum:vm-100-disk-1"
+// storagePoolPattern validates storage pool disk references like "uldum:vm-100-disk-1".
 var storagePoolPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+:.+$`)
 
-// passthroughPattern validates passthrough device paths like "/dev/disk/by-id/..."
+// passthroughPattern validates passthrough device paths like "/dev/disk/by-id/...".
 var passthroughPattern = regexp.MustCompile(`^/dev/`)
 
 // ValidateAdditionalDisks validates the additional disks configuration.

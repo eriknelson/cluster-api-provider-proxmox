@@ -1,0 +1,133 @@
+workflow:
+  rules:
+    - if: '$RELEASE == "true" && $CI_COMMIT_BRANCH == "main"'
+    - if: '$RELEASE == "true"'
+      when: never
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+
+stages:
+  - prepare
+  - validate
+  - build
+  - release
+
+variables:
+  HARBOR_REGISTRY: harbor.secnet.nsk.io
+  IMAGE: harbor.secnet.nsk.io/capmox/capmox
+  BUILDKIT_ADDR: tcp://titan-buildkitd.secnet.nsk.io:1234
+  NODE_IMAGE: harbor.secnet.nsk.io/dockerhub/library/node:22-bookworm-slim
+  GO_IMAGE: harbor.secnet.nsk.io/dockerhub/library/golang:1.26.6
+  GOMODCACHE: "$CI_PROJECT_DIR/.cache/gomod"
+  GOCACHE: "$CI_PROJECT_DIR/.cache/gobuild"
+
+default:
+  tags:
+    - titan-docker
+
+.go:
+  image: $GO_IMAGE
+  cache:
+    key:
+      files:
+        - go.sum
+    paths:
+      - .cache/gomod
+      - .cache/gobuild
+      - bin
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git make
+
+lint:
+  extends: .go
+  stage: validate
+  script:
+    - make lint
+
+verify-versions:
+  extends: .go
+  stage: validate
+  script:
+    - make verify-versions
+
+test:
+  extends: .go
+  stage: validate
+  script:
+    - make test WHAT='./...'
+
+determine-version:
+  stage: prepare
+  image: $NODE_IMAGE
+  variables:
+    GIT_STRATEGY: clone
+    GIT_DEPTH: 0
+  rules:
+    - if: '$RELEASE == "true"'
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git ca-certificates
+    - npm init -y >/dev/null
+    - npm install --save-dev semantic-release@24 @semantic-release/commit-analyzer
+        @semantic-release/release-notes-generator @semantic-release/changelog
+        @semantic-release/git @semantic-release/gitlab
+        conventional-changelog-conventionalcommits@10.3.0
+  script:
+    - |
+      set +e
+      SR_OUTPUT=$(npx --no-install semantic-release --dry-run --no-ci 2>&1)
+      SR_EXIT=$?
+      set -e
+      echo "$SR_OUTPUT"
+      test "$SR_EXIT" -eq 0 || exit "$SR_EXIT"
+      VERSION=$(echo "$SR_OUTPUT" | sed -n 's/.*[Tt]he next release version is \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' | head -1)
+      test -n "$VERSION" || { echo 'No release version determined'; exit 1; }
+      echo "VERSION=$VERSION" > version.env
+  artifacts:
+    reports:
+      dotenv: version.env
+
+build:image:
+  stage: build
+  image: harbor.secnet.nsk.io/dockerhub/library/docker:27-cli
+  needs:
+    - lint
+    - verify-versions
+    - test
+    - job: determine-version
+      optional: true
+  script:
+    - |
+      set -eu
+      docker buildx create --name titan-remote --driver remote "$BUILDKIT_ADDR" --use
+      if [ "${RELEASE:-}" = "true" ]; then
+        test -n "${VERSION:-}" || { echo 'Missing release version'; exit 1; }
+        echo "$HARBOR_PASS" | docker login "$HARBOR_REGISTRY" -u "$HARBOR_USER" --password-stdin
+        docker buildx build --push --platform linux/amd64,linux/arm64 \
+          --tag "${IMAGE}:${VERSION}" .
+      else
+        docker buildx build --platform linux/amd64 \
+          --tag "${IMAGE}:${CI_COMMIT_SHORT_SHA}" .
+      fi
+
+semantic-release:
+  stage: release
+  image: $NODE_IMAGE
+  variables:
+    GIT_STRATEGY: clone
+    GIT_DEPTH: 0
+  rules:
+    - if: '$RELEASE == "true"'
+  needs:
+    - determine-version
+    - build:image
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git ca-certificates
+    - npm init -y >/dev/null
+    - npm install --save-dev semantic-release@24 @semantic-release/commit-analyzer
+        @semantic-release/release-notes-generator @semantic-release/changelog
+        @semantic-release/git @semantic-release/gitlab
+        conventional-changelog-conventionalcommits@10.3.0
+  script:
+    - npx --no-install semantic-release
