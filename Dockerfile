@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.26.6 AS builder
+FROM harbor.secnet.nsk.io/dockerhub/library/golang:1.26.6 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 
@@ -24,11 +24,12 @@ COPY pkg/ pkg/
 # by leaving it empty we can ensure that the container and binary shipped on it will have the same platform.
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o manager cmd/main.go
 
-# Use distroless as minimal base image to package the manager binary
-# Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static:nonroot
+# The manager is statically linked. Keep the runtime independent of GCR,
+# which the titan builder cannot reach directly.
+FROM scratch
 WORKDIR /
 COPY --from=builder /workspace/manager .
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]
